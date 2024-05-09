@@ -157,19 +157,24 @@ class SyncFilter(FilterExtension):
         return topic_metadata
 
     def sync_callback(self, *msgs: BagWrappedMessage):
-        self._msgs.extend([(msg.topic, serialize_message(msg.msg),
-                           msgs[0].t if self._unify_first_topic else msg.t)
-                           for msg in msgs])
+        for msg in msgs:
+            time_header = msg.header.stamp.sec*pow(10,9) + msg.header.stamp.nanosec 
+            time_header_unify = msgs[0].header.stamp.sec*pow(10,9) + msgs[0].header.stamp.nanosec 
+            self._msgs.extend([(msg.topic, serialize_message(msg.msg),
+                           time_header_unify if self._unify_first_topic else time_header)])
         self._num_syncs += 1
 
     def filter_msg(self, msg: BagMessageTuple):
         topic, data, t = msg
 
+        deserialized_msg = deserialize_message(data, self._topic_type_map[topic])
+        time_header = deserialized_msg.header.stamp.sec*pow(10,9) + deserialized_msg.header.stamp.nanosec 
+
         if topic not in self._sync_filters:
             return msg
 
         self._sync_filters[topic].signalMessage(BagWrappedMessage(
-            t, topic, deserialize_message(data, self._topic_type_map[topic])))
+            time_header, topic, deserialize_message(data, self._topic_type_map[topic])))
 
         result = self._msgs
         self._msgs = []

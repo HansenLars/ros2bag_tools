@@ -102,11 +102,26 @@ class PcdExporter(Exporter):
         filename = filename.replace('%i', str(self._i).zfill(8))
         cloud_path = self._dir / filename
 
+        field_names = []
+        field_sizes = []
+        field_types = []
+        field_counts = []
+        filtered_cloud_fields = []
+        point_step = 0
+
         with open(str(cloud_path), 'w') as f:
-            field_names = [f.name for f in cloud.fields]
-            field_sizes = [str(field_size(f.datatype)) for f in cloud.fields]
-            field_types = [field_type_str(f.datatype) for f in cloud.fields]
-            field_counts = [str(f.count) for f in cloud.fields]
+            for field in cloud.fields:
+                if not field.name == "":
+                    field_names.append(field.name)
+                    field_sizes.append(str(field_size(field.datatype)))
+                    field_types.append(field_type_str(field.datatype))
+                    field_counts.append(str(field.count))
+                    filtered_cloud_fields.append(field)
+                    point_step += field_size(field.datatype)
+                else:
+                    continue
+            if point_step != cloud.point_step:
+                raise ValueError("Dummy field removal lead to point_step size mismatch")
 
             field_names = ' '.join(field_names)
             field_sizes = ' '.join(field_sizes)
@@ -127,7 +142,7 @@ class PcdExporter(Exporter):
 
             for i in range(n_points):
                 offset = i * cloud.point_step
-                for field in cloud.fields:
+                for field in filtered_cloud_fields:
                     val = np.frombuffer(cloud.data, count=1, offset=offset + field.offset,
                                         dtype=pcd_type_to_np_type(field.datatype))[0]
                     f.write(f'{val} ')

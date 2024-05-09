@@ -111,7 +111,8 @@ class ExportVerb(VerbExtension):
             for exporter_topic, exporter in exporters:
                 if exporter_topic == topic:
                     try:
-                        exporter.write(topic, msg, t)
+                        time_header = msg.header.stamp.sec*pow(10,9) + msg.header.stamp.nanosec
+                        exporter.write(topic, msg, time_header)
                     except ExporterError as e:
                         return print_error(f'exporter write failed: {str(e)}')
         for _, exporter in exporters:
