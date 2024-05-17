@@ -68,6 +68,7 @@ The package provides the additional commands for the ROS 2 bag command line tool
             'stamp = ros2bag_tools.exporter.stamp:StampExporter',
             'pcd = ros2bag_tools.exporter.pcd:PcdExporter',
             'imu = ros2bag_tools.exporter.imu:IMUExporter',
+            'gnss = ros2bag_tools.exporter.gnss:GNSSExporter',
         ],
     }
 )
